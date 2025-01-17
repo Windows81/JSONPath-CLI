@@ -35,6 +35,7 @@ program
   .option('-o, --output <file>', 'output file for matches (default: stdout)')
   .option('-p, --pretty', 'pretty print matches', false)
   .option('-s, --separate', 'output each match separately', false)
+  .option('-n, --noquote', 'if matches are strings, don\'t wrap in quotes (assumes --separate)', false)
   .option('-b, --before <text>', 'output text before any matches')
   .option('-r, --prefix [prefix]', 'prefix when using --separate', false)
   .option('-u, --suffix <suffix>', 'suffix each match except last with <suffix>')
@@ -74,12 +75,27 @@ try {
   }
 
   if(!options.separate) {
-    let data = (options.pretty ? JSON.stringify(results, null, 2) : JSON.stringify(results)) + '\n';
+    let data;
+    if(options.pretty) {
+      data = JSON.stringify(results, null, 2);
+    } else {
+      data = JSON.stringify(results);
+    }
     fs.writeSync(fout, data);
+    fs.writeSync(fout, '\n');
+
   } else {
     let i=1;
     results.forEach(result => {
-      let data = (options.pretty ? JSON.stringify(result, null, 2) : JSON.stringify(result));
+
+      let data;
+      if(options.noquote && typeof result === 'string') {
+        data = result;
+      } else if(options.pretty) {
+        data = JSON.stringify(result, null, 2);
+      } else {
+        data = JSON.stringify(result);
+      }
 
       if(options.prefix) {
         if(options.prefix === true) {
